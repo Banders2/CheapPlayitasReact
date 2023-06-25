@@ -16,12 +16,8 @@ interface TravelData {
 const CheapPlayitas: React.FC = () => {
   const [travelData, setTravelData] = useState<TravelData[]>([]);
   const [filteredData, setFilteredData] = useState<TravelData[]>([]);
-  const [filters, setFilters] = useState<{ column: string; value: string }[]>([]);
+  const [filters, setFilters] = useState<{ column: string; value: string[] }[]>([]);
   const [maxPrice, setMaxPrice] = useState<number>(Infinity);
-  const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
-  const [selectedAirports, setSelectedAirports] = useState<string[]>([]);
-  const [selectedHotels, setSelectedHotels] = useState<string[]>([]);
-  const [selectedDurations, setDurations] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -74,21 +70,15 @@ const CheapPlayitas: React.FC = () => {
       const selectedOptions = Array.from(event.target.options)
         .filter((option) => option.selected && option.value !== '')
         .map((option) => option.value);
-      switch (column) {
-        case 'Date':
-          setSelectedMonths(selectedOptions);
-          break;
-        case 'Airport':
-          setSelectedAirports(selectedOptions)
-          break;
-        case 'Hotel':
-          setSelectedHotels(selectedOptions)
-          break;
-        case 'Duration':
-          setDurations(selectedOptions)
-          break;
-        default:
-          break;
+      const existingFilterIndex = filters.findIndex((filter) => filter.column === column);
+
+      if (existingFilterIndex > -1) {
+        const updatedFilters = [...filters];
+        updatedFilters[existingFilterIndex].value = selectedOptions;
+
+        setFilters(updatedFilters);
+      } else {
+        setFilters([...filters, { column, value: selectedOptions }]);
       }
     } else if (column === 'CheapestPrice') {
       const numericValue = parseFloat(value);
@@ -98,7 +88,7 @@ const CheapPlayitas: React.FC = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [filters, maxPrice, selectedMonths, selectedAirports, selectedHotels, selectedDurations]);
+  }, [maxPrice, filters]);
 
   const applyFilters = () => {
     let filteredResults = [...travelData];
@@ -106,10 +96,14 @@ const CheapPlayitas: React.FC = () => {
       item['CheapestPrice'] <= maxPrice
     );
 
-    if (selectedMonths.length > 0) {filteredResults = filteredResults.filter((item) => {return selectedMonths.includes(item.Date.substring(0, 7));});}
-    if (selectedAirports.length > 0) { filteredResults = filteredResults.filter((item) => { return selectedAirports.includes(item.Airport); }); }
-    if (selectedHotels.length > 0) { filteredResults = filteredResults.filter((item) => { return selectedHotels.includes(item.Hotel); }); }
-    if (selectedDurations.length > 0) { filteredResults = filteredResults.filter((item) => { return selectedDurations.includes(item.Duration); }); }
+    filters.forEach((filter) => {
+      const { column, value } = filter;
+      if(column === 'Date'){
+        if (value.length > 0) { filteredResults = filteredResults.filter((item) => value.includes(String(item[column]).substring(0, 7))); }
+      } else{
+        if (value.length > 0) { filteredResults = filteredResults.filter((item) => value.includes(String(item[column]))); }
+      }
+    });
 
     setFilteredData(filteredResults);
   };
@@ -129,11 +123,11 @@ const CheapPlayitas: React.FC = () => {
       <table className={styles.table}>
         <thead>
           <tr>
-            {DropdownList(selectedAirports, uniqueAirports, 'Airport')}
+            {DropdownList(uniqueAirports, 'Airport')}
             {MaxValue('CheapestPrice')}
-            {DropdownList(selectedMonths, uniqueYearMonthCombinations, 'Date')}
-            {DropdownList(selectedDurations, uniqueDurations, 'Duration')}
-            {DropdownList(selectedHotels, uniqueHotels, 'Hotel')}
+            {DropdownList(uniqueYearMonthCombinations, 'Date')}
+            {DropdownList(uniqueDurations, 'Duration')}
+            {DropdownList(uniqueHotels, 'Hotel')}
             <th className={styles.cell}>Link</th>
           </tr>
         </thead>
@@ -167,11 +161,12 @@ const CheapPlayitas: React.FC = () => {
     </th>;
   }
 
-  function DropdownList(selectedList: string[], uniqueList: string[], columnName: string) {
+  function DropdownList(uniqueList: string[], columnName: string) {
+    let selectedList = filters.find(x => x.column === columnName)?.value
     return <th className={styles.cell}>
       <select
         className={styles.filterInput}
-        value={selectedList.length === uniqueList.length ? '' : selectedList}
+        value={selectedList?.length === uniqueList.length ? '' : selectedList}
         onChange={(e) => handleFilterChange(e, columnName)}
         multiple
       >

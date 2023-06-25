@@ -1,0 +1,52 @@
+table {
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+td,
+th {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+}
+
+tr:nth-child(even) {
+    background-color: #dddddd;
+}
+
+input[type=number] {
+    width: 100%;
+    padding: 12px 20px;
+    margin: 8px 0;
+    box-sizing: border-box;
+}
+
+input[type=number]:focus {
+    border: 3px solid #555;
+}
+
+input[type=checkbox] {
+    width: 40px;
+    height: 40px;
+}
+
+
+.filterInput {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  
+  .filterInput option {
+    background-color: #fff;
+    color: #000;
+  }
+  
+  .filterInput:focus {
+    outline: none;
+    border-color: #888;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+  }

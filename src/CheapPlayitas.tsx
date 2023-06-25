@@ -25,7 +25,7 @@ const CheapPlayitas: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/prices?MaxPrice7=&MaxPrice14=15000&persons=&PlayitasAnnexe=true&PlayitasResort=true&airportcph=true&airportbll=true');
+        const response = await fetch('http://localhost:5000/api/prices?MaxPrice7=100000&MaxPrice14=100000&persons=&PlayitasAnnexe=true&PlayitasResort=true&airportcph=true&airportbll=true');
         const json: TravelData[] = await response.json();
         setTravelData(json);
         setFilteredData(json);
@@ -36,6 +36,35 @@ const CheapPlayitas: React.FC = () => {
 
     fetchData();
   }, []);
+
+  // Rest of your code...
+
+  // const baseUrl = 'http://localhost:5000/api/prices';
+  // const hotels = ["PlayitasAnnexe", "PlayitasResort"]
+  // const fetchUrls: string[] = [];
+  // hotels.forEach( hotel => {
+  //   const queryParams = `MaxPrice7=&MaxPrice14=15000&persons=&${hotel}=true&airportcph=true&airportbll=true`;
+  //   const url = `${baseUrl}?${queryParams}`;
+  //   fetchUrls.push(url);
+  // })
+
+  // const fetchPromises = fetchUrls.map((url) => fetch(url));
+  // Promise.all(fetchPromises)
+  //   .then((responses) => Promise.all(responses.map((response) => response.json())))
+  //   .then((jsonData) => {
+  //     // Merge the travel data from all responses
+  //     const mergedData = jsonData.reduce((accumulator, data) => accumulator.concat(data), []);
+
+  //     setTravelData(mergedData);
+  //     setFilteredData(mergedData);
+  //   })
+  //   .catch((error) => {
+  //     console.error('Error fetching data:', error);
+  //   });
+
+
+
+
 
   const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, column: string) => {
     const value = event.target.value;
@@ -79,7 +108,7 @@ const CheapPlayitas: React.FC = () => {
 
     filters.forEach((filter) => {
       const { column, value } = filter;
-      if (column === 'Hotel' || column === 'Airport') {
+      if (column === 'Hotel' || column === 'Airport' || column === 'Duration') {
         filteredResults = filteredResults.filter((item) =>
           item[column].toLowerCase().includes(value.toLowerCase())
         );
@@ -92,7 +121,7 @@ const CheapPlayitas: React.FC = () => {
 
     if (selectedMonths.length > 0) {
       filteredResults = filteredResults.filter((item) => {
-        const itemMonthYear = item.Date.substring(0,7);
+        const itemMonthYear = item.Date.substring(0, 7);
         return selectedMonths.includes(itemMonthYear);
       });
     }

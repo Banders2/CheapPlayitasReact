@@ -130,7 +130,7 @@ const CheapPlayitas: React.FC = () => {
         <thead>
           <tr>
             {DropdownList(selectedAirports, uniqueAirports, 'Airport')}
-            {LessThan('CheapestPrice')}
+            {MaxValue('CheapestPrice')}
             {DropdownList(selectedMonths, uniqueYearMonthCombinations, 'Date')}
             {DropdownList(selectedDurations, uniqueDurations, 'Duration')}
             {DropdownList(selectedHotels, uniqueHotels, 'Hotel')}
@@ -157,7 +157,7 @@ const CheapPlayitas: React.FC = () => {
     </div>
   );
 
-  function LessThan(columnName: string) {
+  function MaxValue(columnName: string) {
     return <th className={styles.cell}>
       <input
         type="number"

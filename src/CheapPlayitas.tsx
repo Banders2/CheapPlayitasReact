@@ -19,13 +19,14 @@ const CheapPlayitas: React.FC = () => {
   const [filters, setFilters] = useState<{ column: string; value: string }[]>([]);
   const [maxPrice, setMaxPrice] = useState<number>(Infinity);
   const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
-
-
+  const [selectedAirports, setSelectedAirports] = useState<string[]>([]);
+  const [selectedHotels, setSelectedHotels] = useState<string[]>([]);
+  const [selectedDurations, setDurations] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/prices?MaxPrice7=100000&MaxPrice14=100000&persons=&PlayitasAnnexe=true&PlayitasResort=true&airportcph=true&airportbll=true');
+        const response = await fetch('http://localhost:8080/api/prices?MaxPrice7=100000&MaxPrice14=100000&persons=&PlayitasAnnexe=true&PlayitasResort=true&airportcph=true&airportbll=true');
         const json: TravelData[] = await response.json();
         setTravelData(json);
         setFilteredData(json);
@@ -69,72 +70,58 @@ const CheapPlayitas: React.FC = () => {
   const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, column: string) => {
     const value = event.target.value;
 
-    if (column === 'Date' && event.target instanceof HTMLSelectElement) {
+    if (event.target instanceof HTMLSelectElement) {
       const selectedOptions = Array.from(event.target.options)
-        .filter((option) => option.selected)
+        .filter((option) => option.selected && option.value !== '')
         .map((option) => option.value);
-      setSelectedMonths(selectedOptions);
+      switch (column) {
+        case 'Date':
+          setSelectedMonths(selectedOptions);
+          break;
+        case 'Airport':
+          setSelectedAirports(selectedOptions)
+          break;
+        case 'Hotel':
+          setSelectedHotels(selectedOptions)
+          break;
+        case 'Duration':
+          setDurations(selectedOptions)
+          break;
+        default:
+          break;
+      }
     } else if (column === 'CheapestPrice') {
       const numericValue = parseFloat(value);
       setMaxPrice(isNaN(numericValue) ? Infinity : numericValue);
-    } else {
-
-      // Check if the filter already exists
-      const filterIndex = filters.findIndex((filter) => filter.column === column);
-
-      // If the filter exists, update the value; otherwise, add a new filter
-      if (filterIndex !== -1) {
-        const updatedFilters = [...filters];
-        updatedFilters[filterIndex] = { column, value };
-        setFilters(updatedFilters);
-      } else {
-        setFilters([...filters, { column, value }]);
-      }
     }
   };
 
   useEffect(() => {
     applyFilters();
-  }, [filters, maxPrice, selectedMonths]);
+  }, [filters, maxPrice, selectedMonths, selectedAirports, selectedHotels, selectedDurations]);
 
   const applyFilters = () => {
     let filteredResults = [...travelData];
-
-    // filteredResults = filteredResults.filter((item) => {
-    //   const itemValue = String(item.CheapestPrice).toLowerCase();
-    //   const numericValue = parseFloat(itemValue);
-    //   return !isNaN(numericValue) && numericValue <= maxPrice;
-    // });
-
-    filters.forEach((filter) => {
-      const { column, value } = filter;
-      if (column === 'Hotel' || column === 'Airport' || column === 'Duration') {
-        filteredResults = filteredResults.filter((item) =>
-          item[column].toLowerCase().includes(value.toLowerCase())
-        );
-      }
-    });
-
     filteredResults = filteredResults.filter((item) =>
       item['CheapestPrice'] <= maxPrice
     );
 
-    if (selectedMonths.length > 0) {
-      filteredResults = filteredResults.filter((item) => {
-        const itemMonthYear = item.Date.substring(0, 7);
-        return selectedMonths.includes(itemMonthYear);
-      });
-    }
+    if (selectedMonths.length > 0) {filteredResults = filteredResults.filter((item) => {return selectedMonths.includes(item.Date.substring(0, 7));});}
+    if (selectedAirports.length > 0) { filteredResults = filteredResults.filter((item) => { return selectedAirports.includes(item.Airport); }); }
+    if (selectedHotels.length > 0) { filteredResults = filteredResults.filter((item) => { return selectedHotels.includes(item.Hotel); }); }
+    if (selectedDurations.length > 0) { filteredResults = filteredResults.filter((item) => { return selectedDurations.includes(item.Duration); }); }
 
     setFilteredData(filteredResults);
   };
 
-  const uniqueHotels = [...new Set(travelData.map((item) => item.Hotel))];
-  const uniqueAirports = [...new Set(travelData.map((item) => item.Airport))];
-  const uniqueDurations = [...new Set(travelData.map((item) => item.Duration))];
-  const uniqueYearMonthCombinations = [...new Set(travelData.map((item) => item.Date.substring(0, 7)))];
+  const getUniqueSortedValues = <T, K extends keyof T>(data: T[], getProperty: (item: T) => T[K]): string[] => {
+    return [...new Set(data.map(getProperty))].sort() as string[];
+  };
 
-
+  const uniqueHotels = getUniqueSortedValues<TravelData, string>(travelData, (item) => item.Hotel);
+  const uniqueAirports = getUniqueSortedValues<TravelData, string>(travelData, (item) => item.Airport);
+  const uniqueDurations = getUniqueSortedValues<TravelData, string>(travelData, (item) => item.Duration);
+  const uniqueYearMonthCombinations = getUniqueSortedValues<TravelData, string>(travelData, (item) => item.Date.substring(0, 7));
 
   return (
     <div>
@@ -142,71 +129,11 @@ const CheapPlayitas: React.FC = () => {
       <table className={styles.table}>
         <thead>
           <tr>
-            <th className={styles.cell}>
-              <select
-                className={styles.filterInput}
-                value={filters.find((filter) => filter.column === 'Airport')?.value || ''}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleFilterChange(e, 'Airport')}
-              >
-                <option value="">Filter by Airport</option>
-                {uniqueAirports.map((airport) => (
-                  <option key={airport} value={airport}>
-                    {airport}
-                  </option>
-                ))}
-              </select>
-            </th>
-            <th className={styles.cell}>
-              <input
-                type="number"
-                placeholder="Filter by Cheapest Price"
-                value={maxPrice === Infinity ? '' : maxPrice}
-                onChange={(e) => handleFilterChange(e, 'CheapestPrice')}
-              />
-            </th>
-            <th className={styles.cell}>
-              <select
-                className={styles.filterInput}
-                multiple
-                value={selectedMonths}
-                onChange={(e) => handleFilterChange(e, 'Date')}
-              >
-                <option value="">Filter by Date</option>
-                {uniqueYearMonthCombinations.map((date) => (
-                  <option key={date} value={date}>
-                    {date}
-                  </option>
-                ))}
-              </select>
-            </th>
-            <th className={styles.cell}>
-              <select
-                className={styles.filterInput}
-                value={filters.find((filter) => filter.column === 'Duration')?.value || ''}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleFilterChange(e, 'Duration')}
-              >
-                <option value="">Filter by Duration</option>
-                {uniqueDurations.map((duration) => (
-                  <option key={duration} value={duration}>
-                    {duration}
-                  </option>
-                ))}
-              </select>
-            </th>
-            <th className={styles.cell}>
-              <select
-                className={styles.filterInput}
-                value={filters.find((filter) => filter.column === 'Hotel')?.value || ''}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleFilterChange(e, 'Hotel')}
-              >
-                <option value="">Filter by Hotel</option>
-                {uniqueHotels.map((hotel) => (
-                  <option key={hotel} value={hotel}>
-                    {hotel}
-                  </option>
-                ))}
-              </select>
-            </th>
+            {DropdownList(selectedAirports, uniqueAirports, 'Airport')}
+            {LessThan('CheapestPrice')}
+            {DropdownList(selectedMonths, uniqueYearMonthCombinations, 'Date')}
+            {DropdownList(selectedDurations, uniqueDurations, 'Duration')}
+            {DropdownList(selectedHotels, uniqueHotels, 'Hotel')}
             <th className={styles.cell}>Link</th>
           </tr>
         </thead>
@@ -229,6 +156,34 @@ const CheapPlayitas: React.FC = () => {
       </table>
     </div>
   );
+
+  function LessThan(columnName: string) {
+    return <th className={styles.cell}>
+      <input
+        type="number"
+        placeholder="Enter Max Price"
+        value={maxPrice === Infinity ? '' : maxPrice}
+        onChange={(e) => handleFilterChange(e, columnName)} />
+    </th>;
+  }
+
+  function DropdownList(selectedList: string[], uniqueList: string[], columnName: string) {
+    return <th className={styles.cell}>
+      <select
+        className={styles.filterInput}
+        value={selectedList.length === uniqueList.length ? '' : selectedList}
+        onChange={(e) => handleFilterChange(e, columnName)}
+        multiple
+      >
+        <option value="">All {columnName}s</option>
+        {uniqueList.map((element) => (
+          <option key={element} value={element}>
+            {element}
+          </option>
+        ))}
+      </select>
+    </th>;
+  }
 };
 
 export default CheapPlayitas;

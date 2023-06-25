@@ -18,6 +18,7 @@ const CheapPlayitas: React.FC = () => {
   const [filteredData, setFilteredData] = useState<TravelData[]>([]);
   const [filters, setFilters] = useState<{ column: string; value: string }[]>([]);
   const [maxPrice, setMaxPrice] = useState<number>(Infinity);
+  const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
 
 
 
@@ -39,10 +40,14 @@ const CheapPlayitas: React.FC = () => {
   const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, column: string) => {
     const value = event.target.value;
 
-    if (column === 'CheapestPrice') {
+    if (column === 'Date' && event.target instanceof HTMLSelectElement) {
+      const selectedOptions = Array.from(event.target.options)
+        .filter((option) => option.selected)
+        .map((option) => option.value);
+      setSelectedMonths(selectedOptions);
+    } else if (column === 'CheapestPrice') {
       const numericValue = parseFloat(value);
       setMaxPrice(isNaN(numericValue) ? Infinity : numericValue);
-      // applyFilters(); // Trigger filter immediately after updating maxPrice
     } else {
 
       // Check if the filter already exists
@@ -61,7 +66,7 @@ const CheapPlayitas: React.FC = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [filters, maxPrice]);
+  }, [filters, maxPrice, selectedMonths]);
 
   const applyFilters = () => {
     let filteredResults = [...travelData];
@@ -82,8 +87,15 @@ const CheapPlayitas: React.FC = () => {
     });
 
     filteredResults = filteredResults.filter((item) =>
-    item['CheapestPrice'] <= maxPrice
-  );
+      item['CheapestPrice'] <= maxPrice
+    );
+
+    if (selectedMonths.length > 0) {
+      filteredResults = filteredResults.filter((item) => {
+        const itemMonthYear = item.Date.substring(0,7);
+        return selectedMonths.includes(itemMonthYear);
+      });
+    }
 
     setFilteredData(filteredResults);
   };
@@ -91,7 +103,7 @@ const CheapPlayitas: React.FC = () => {
   const uniqueHotels = [...new Set(travelData.map((item) => item.Hotel))];
   const uniqueAirports = [...new Set(travelData.map((item) => item.Airport))];
   const uniqueDurations = [...new Set(travelData.map((item) => item.Duration))];
-  const uniqueYearMonthCombinations = [...new Set(travelData.map((item) => item.Date.substring(0,7)))];
+  const uniqueYearMonthCombinations = [...new Set(travelData.map((item) => item.Date.substring(0, 7)))];
 
 
 
@@ -101,38 +113,6 @@ const CheapPlayitas: React.FC = () => {
       <table className={styles.table}>
         <thead>
           <tr>
-            {/* <th className={styles.cell}>
-              <input
-                type="text"
-                placeholder="Filter by Airport"
-                value={filters.find((filter) => filter.column === 'Airport')?.value || ''}
-                onChange={(e) => handleFilterChange(e, 'Airport')}
-              />
-            </th>
-            <th className={styles.cell}>
-              <input
-                type="text"
-                placeholder="Filter by Cheapest Price"
-                value={filters.find((filter) => filter.column === 'CheapestPrice')?.value || ''}
-                onChange={(e) => handleFilterChange(e, 'CheapestPrice')}
-              />
-            </th>
-            <th className={styles.cell}>
-              <input
-                type="text"
-                placeholder="Filter by Date"
-                value={filters.find((filter) => filter.column === 'Date')?.value || ''}
-                onChange={(e) => handleFilterChange(e, 'Date')}
-              />
-            </th>
-            <th className={styles.cell}>
-              <input
-                type="text"
-                placeholder="Filter by Duration"
-                value={filters.find((filter) => filter.column === 'Duration')?.value || ''}
-                onChange={(e) => handleFilterChange(e, 'Duration')}
-              />
-            </th> */}
             <th className={styles.cell}>
               <select
                 className={styles.filterInput}
@@ -155,7 +135,21 @@ const CheapPlayitas: React.FC = () => {
                 onChange={(e) => handleFilterChange(e, 'CheapestPrice')}
               />
             </th>
-            <th className={styles.cell}>Date</th>
+            <th className={styles.cell}>
+              <select
+                className={styles.filterInput}
+                multiple
+                value={selectedMonths}
+                onChange={(e) => handleFilterChange(e, 'Date')}
+              >
+                <option value="">Filter by Date</option>
+                {uniqueYearMonthCombinations.map((date) => (
+                  <option key={date} value={date}>
+                    {date}
+                  </option>
+                ))}
+              </select>
+            </th>
             <th className={styles.cell}>
               <select
                 className={styles.filterInput}

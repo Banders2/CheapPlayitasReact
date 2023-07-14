@@ -2,14 +2,13 @@ import React, { useState, useEffect } from 'react';
 import styles from './CheapPlayitas.module.css';
 
 interface TravelData {
-  Airport: string;
-  CheapestPrice: number;
-  Date: string;
-  Duration: string;
-  Hotel: string;
-  IsSoldOut: boolean;
-  Link: string;
-  [key: string]: string | number | boolean; // Index signature
+  airport: string;
+  price: string;
+  date: string;
+  duration: string;
+  hotel: string;
+  link: string;
+  [key: string]: string; // Index signature
 }
 
 
@@ -22,8 +21,17 @@ const CheapPlayitas: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('http://localhost:8080/api/prices?MaxPrice7=100000&MaxPrice14=100000&persons=&PlayitasAnnexe=true&PlayitasResort=true&airportcph=true&airportbll=true');
+        // const response = await fetch('https://localhost:7291/api/prices');
+        const response = await fetch('https://cheapplayitasapi.azurewebsites.net/api/prices');
         const json: TravelData[] = await response.json();
+
+        // TODO remove later when fixing filtering
+        json.sort((a, b) => {
+          const dateA = new Date(a.date);
+          const dateB = new Date(b.date);
+          return dateA.getTime() - dateB.getTime();
+        });
+
         setTravelData(json);
         setFilteredData(json);
       } catch (error) {
@@ -33,35 +41,6 @@ const CheapPlayitas: React.FC = () => {
 
     fetchData();
   }, []);
-
-  // Rest of your code...
-
-  // const baseUrl = 'http://localhost:5000/api/prices';
-  // const hotels = ["PlayitasAnnexe", "PlayitasResort"]
-  // const fetchUrls: string[] = [];
-  // hotels.forEach( hotel => {
-  //   const queryParams = `MaxPrice7=&MaxPrice14=15000&persons=&${hotel}=true&airportcph=true&airportbll=true`;
-  //   const url = `${baseUrl}?${queryParams}`;
-  //   fetchUrls.push(url);
-  // })
-
-  // const fetchPromises = fetchUrls.map((url) => fetch(url));
-  // Promise.all(fetchPromises)
-  //   .then((responses) => Promise.all(responses.map((response) => response.json())))
-  //   .then((jsonData) => {
-  //     // Merge the travel data from all responses
-  //     const mergedData = jsonData.reduce((accumulator, data) => accumulator.concat(data), []);
-
-  //     setTravelData(mergedData);
-  //     setFilteredData(mergedData);
-  //   })
-  //   .catch((error) => {
-  //     console.error('Error fetching data:', error);
-  //   });
-
-
-
-
 
   const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, column: string) => {
     const value = event.target.value;
@@ -80,7 +59,7 @@ const CheapPlayitas: React.FC = () => {
       } else {
         setFilters([...filters, { column, value: selectedOptions }]);
       }
-    } else if (column === 'CheapestPrice') {
+    } else if (column === 'price') {
       const numericValue = parseFloat(value);
       setMaxPrice(isNaN(numericValue) ? Infinity : numericValue);
     }
@@ -88,22 +67,34 @@ const CheapPlayitas: React.FC = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [maxPrice, filters]);
+  }, [maxPrice, filters, travelData]);
 
   const applyFilters = () => {
     let filteredResults = [...travelData];
     filteredResults = filteredResults.filter((item) =>
-      item['CheapestPrice'] <= maxPrice
+    parseFloat(item['price']) <= maxPrice
     );
 
     filters.forEach((filter) => {
       const { column, value } = filter;
-      if(column === 'Date'){
-        if (value.length > 0) { filteredResults = filteredResults.filter((item) => value.includes(String(item[column]).substring(0, 7))); }
+      if(column === 'date'){
+        if (value.length > 0) { 
+          filteredResults = filteredResults.filter((item) => value.includes(item[column].substring(0, 7))); 
+        }
       } else{
-        if (value.length > 0) { filteredResults = filteredResults.filter((item) => value.includes(String(item[column]))); }
+        if (value.length > 0) { 
+          filteredResults = filteredResults.filter((item) => value.includes(String(item[column]))); 
+        }
       }
     });
+
+    // TODO Lets do sorting in columns later on
+    filteredResults.sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      return dateA.getTime() - dateB.getTime();
+    });
+  
 
     setFilteredData(filteredResults);
   };
@@ -112,10 +103,16 @@ const CheapPlayitas: React.FC = () => {
     return [...new Set(data.map(getProperty))].sort() as string[];
   };
 
-  const uniqueHotels = getUniqueSortedValues<TravelData, string>(travelData, (item) => item.Hotel);
-  const uniqueAirports = getUniqueSortedValues<TravelData, string>(travelData, (item) => item.Airport);
-  const uniqueDurations = getUniqueSortedValues<TravelData, string>(travelData, (item) => item.Duration);
-  const uniqueYearMonthCombinations = getUniqueSortedValues<TravelData, string>(travelData, (item) => item.Date.substring(0, 7));
+  const getUniqueSortedNumberValues = <T, K extends keyof T>(data: T[], getProperty: (item: T) => T[K]): string[] => {
+    return [...new Set(data.map(getProperty))]
+      .sort((a, b) => Number(a) - Number(b))
+      .map(String);
+  };
+
+  const uniqueHotels = getUniqueSortedValues<TravelData, string>(travelData, (item) => item.hotel);
+  const uniqueAirports = getUniqueSortedValues<TravelData, string>(travelData, (item) => item.airport);
+  const uniqueDurations = getUniqueSortedNumberValues<TravelData, string>(travelData, (item) => item.duration);
+  const uniqueYearMonthCombinations = getUniqueSortedValues<TravelData, string>(travelData, (item) => item.date.substring(0, 7));
 
   return (
     <div>
@@ -123,24 +120,24 @@ const CheapPlayitas: React.FC = () => {
       <table className={styles.table}>
         <thead>
           <tr>
-            {DropdownList(uniqueAirports, 'Airport')}
-            {MaxValue('CheapestPrice')}
-            {DropdownList(uniqueYearMonthCombinations, 'Date')}
-            {DropdownList(uniqueDurations, 'Duration')}
-            {DropdownList(uniqueHotels, 'Hotel')}
+            {DropdownList(uniqueAirports, 'airport')}
+            {MaxValue('price')}
+            {DropdownList(uniqueYearMonthCombinations, 'date')}
+            {DropdownList(uniqueDurations, 'duration')}
+            {DropdownList(uniqueHotels, 'hotel')}
             <th className={styles.cell}>Link</th>
           </tr>
         </thead>
         <tbody>
           {filteredData.map((item, index) => (
             <tr key={index} className={index % 2 === 0 ? styles.evenRow : ''}>
-              <td className={styles.cell}>{item.Airport}</td>
-              <td className={styles.cell}>{item.CheapestPrice}</td>
-              <td className={styles.cell}>{item.Date}</td>
-              <td className={styles.cell}>{item.Duration}</td>
-              <td className={styles.cell}>{item.Hotel}</td>
+              <td className={styles.cell}>{item.airport}</td>
+              <td className={styles.cell}>{item.price}</td>
+              <td className={styles.cell}>{item.date.substring(0,10)}</td>
+              <td className={styles.cell}>{item.duration}</td>
+              <td className={styles.cell}>{item.hotel}</td>
               <td className={styles.cell}>
-                <a href={item.Link} target="_blank" rel="noopener noreferrer">
+                <a href={item.link} target="_blank" rel="noopener noreferrer">
                   View Details
                 </a>
               </td>

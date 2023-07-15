@@ -38,15 +38,48 @@ input[type=checkbox] {
     border: 1px solid #ccc;
     border-radius: 4px;
     font-size: 14px;
-  }
-  
-  .filterInput option {
+}
+
+.filterInput option {
     background-color: #fff;
     color: #000;
-  }
-  
-  .filterInput:focus {
+}
+
+.filterInput:focus {
     outline: none;
     border-color: #888;
     box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
-  }
+}
+
+.blue {
+    color: blue;
+}
+
+.table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.cell {
+    padding: 10px;
+}
+
+.evenRow {
+    background-color: #f5f5f5;
+}
+
+.filterInput {
+    width: 100%;
+}
+
+.sortButton {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.sortButton:hover {
+    color: blue;
+}

@@ -17,6 +17,8 @@ const CheapPlayitas: React.FC = () => {
   const [filteredData, setFilteredData] = useState<TravelData[]>([]);
   const [filters, setFilters] = useState<{ column: string; value: string[] }[]>([]);
   const [maxPrice, setMaxPrice] = useState<number>(Infinity);
+  const [sortCriteria, setSortCriteria] = useState<string>('date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -24,13 +26,6 @@ const CheapPlayitas: React.FC = () => {
         // const response = await fetch('https://localhost:7291/api/prices');
         const response = await fetch('https://cheapplayitasapi.azurewebsites.net/api/prices');
         const json: TravelData[] = await response.json();
-
-        // TODO remove later when fixing filtering
-        json.sort((a, b) => {
-          const dateA = new Date(a.date);
-          const dateB = new Date(b.date);
-          return dateA.getTime() - dateB.getTime();
-        });
 
         setTravelData(json);
         setFilteredData(json);
@@ -67,37 +62,44 @@ const CheapPlayitas: React.FC = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [maxPrice, filters, travelData]);
+  }, [maxPrice, filters, travelData, sortCriteria, sortOrder]);
 
   const applyFilters = () => {
     let filteredResults = [...travelData];
     filteredResults = filteredResults.filter((item) =>
-    parseFloat(item['price']) <= maxPrice
+      parseFloat(item['price']) <= maxPrice
     );
 
     filters.forEach((filter) => {
       const { column, value } = filter;
-      if(column === 'date'){
-        if (value.length > 0) { 
-          filteredResults = filteredResults.filter((item) => value.includes(item[column].substring(0, 7))); 
+      if (column === 'date') {
+        if (value.length > 0) {
+          filteredResults = filteredResults.filter((item) => value.includes(item[column].substring(0, 7)));
         }
-      } else{
-        if (value.length > 0) { 
-          filteredResults = filteredResults.filter((item) => value.includes(String(item[column]))); 
+      } else {
+        if (value.length > 0) {
+          filteredResults = filteredResults.filter((item) => value.includes(String(item[column])));
         }
       }
     });
 
-    // TODO Lets do sorting in columns later on
-    filteredResults.sort((a, b) => {
-      const dateA = new Date(a.date);
-      const dateB = new Date(b.date);
-      return dateA.getTime() - dateB.getTime();
-    });
-  
+    sortData(filteredResults, sortCriteria, sortOrder);
 
     setFilteredData(filteredResults);
   };
+
+  function sortData(filteredResults: TravelData[], sortCriteria: string, sortOrder: string) {
+    filteredResults.sort((a, b) => {
+      const valueA = sortCriteria === 'date' ? new Date(a.date).getTime() : parseFloat(a.price);
+      const valueB = sortCriteria === 'date' ? new Date(b.date).getTime() : parseFloat(b.price);
+
+      if (sortOrder === 'asc') {
+        return valueA - valueB;
+      } else {
+        return valueB - valueA;
+      }
+    });
+  }
 
   const getUniqueSortedValues = <T, K extends keyof T>(data: T[], getProperty: (item: T) => T[K]): string[] => {
     return [...new Set(data.map(getProperty))].sort() as string[];
@@ -122,7 +124,7 @@ const CheapPlayitas: React.FC = () => {
           <tr>
             {DropdownList(uniqueAirports, 'airport')}
             {MaxValue('price')}
-            {DropdownList(uniqueYearMonthCombinations, 'date')}
+            {DropdownListWithSort(uniqueYearMonthCombinations, 'date')}
             {DropdownList(uniqueDurations, 'duration')}
             {DropdownList(uniqueHotels, 'hotel')}
             <th className={styles.cell}>Link</th>
@@ -133,7 +135,7 @@ const CheapPlayitas: React.FC = () => {
             <tr key={index} className={index % 2 === 0 ? styles.evenRow : ''}>
               <td className={styles.cell}>{item.airport}</td>
               <td className={styles.cell}>{item.price}</td>
-              <td className={styles.cell}>{item.date.substring(0,10)}</td>
+              <td className={styles.cell}>{item.date.substring(0, 10)}</td>
               <td className={styles.cell}>{item.duration}</td>
               <td className={styles.cell}>{item.hotel}</td>
               <td className={styles.cell}>
@@ -155,26 +157,64 @@ const CheapPlayitas: React.FC = () => {
         placeholder="Enter Max Price"
         value={maxPrice === Infinity ? '' : maxPrice}
         onChange={(e) => handleFilterChange(e, columnName)} />
+      {
+        sortButton(columnName)
+      }
     </th>;
   }
 
   function DropdownList(uniqueList: string[], columnName: string) {
     let selectedList = filters.find(x => x.column === columnName)?.value
     return <th className={styles.cell}>
-      <select
-        className={styles.filterInput}
-        value={selectedList?.length === uniqueList.length ? '' : selectedList}
-        onChange={(e) => handleFilterChange(e, columnName)}
-        multiple
-      >
-        <option value="">All {columnName}s</option>
-        {uniqueList.map((element) => (
-          <option key={element} value={element}>
-            {element}
-          </option>
-        ))}
-      </select>
+      {DropdownListUi(selectedList, uniqueList, columnName)}
     </th>;
+  }
+
+  function DropdownListWithSort(uniqueList: string[], columnName: string) {
+    let selectedList = filters.find(x => x.column === columnName)?.value
+    return <th className={styles.cell}>
+      {DropdownListUi(selectedList, uniqueList, columnName)}
+      {
+        sortButton(columnName)
+      }
+    </th>;
+  }
+
+  function DropdownListUi(selectedList: string[] | undefined, uniqueList: string[], columnName: string) {
+    return <select
+      className={styles.filterInput}
+      value={selectedList?.length === uniqueList.length ? '' : selectedList}
+      onChange={(e) => handleFilterChange(e, columnName)}
+      multiple
+    >
+      <option value="">All {columnName}s</option>
+      {uniqueList.map((element) => (
+        <option key={element} value={element}>
+          {element}
+        </option>
+      ))}
+    </select>;
+  }
+
+  function sortButton(columnName: string): React.ReactNode {
+    return sortCriteria === columnName ? (
+      <button
+        className={styles.sortButton}
+        onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+      >
+        {sortOrder === 'asc' ? '▲' : '▼'}
+      </button>
+    ) : (
+      <button
+        className={styles.sortButton}
+        onClick={() => {
+          setSortCriteria(columnName);
+          setSortOrder('asc');
+        }}
+      >
+        Sort
+      </button>
+    );
   }
 };
 

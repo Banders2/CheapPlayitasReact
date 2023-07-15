@@ -71,35 +71,41 @@ const CheapPlayitas: React.FC = () => {
     }
   };
 
+  
+
   useEffect(() => {
+    const applyFilters = () => {
+      let filteredResults = [...travelData];
+      if (maxPrice !== undefined) {
+        filteredResults = filteredResults.filter((item) => parseFloat(item.price) <= maxPrice);
+      }
+  
+      filters.forEach((filter) => {
+        const { column, value } = filter;
+        if (column === 'date') {
+          if (value.length > 0) {
+            filteredResults = filteredResults.filter((item) =>
+              value.includes(item[column].substring(0, 7))
+            );
+          }
+        } else {
+          if (value.length > 0) {
+            filteredResults = filteredResults.filter((item) => value.includes(String(item[column])));
+          }
+        }
+      });
+  
+      sortData(filteredResults, sortCriteria, sortOrder);
+  
+      setFilteredData(filteredResults);
+    };
+
     applyFilters();
+
+    
   }, [maxPrice, filters, travelData, sortCriteria, sortOrder]);
 
-  const applyFilters = () => {
-    let filteredResults = [...travelData];
-    if (maxPrice !== undefined) {
-      filteredResults = filteredResults.filter((item) => parseFloat(item.price) <= maxPrice);
-    }
-
-    filters.forEach((filter) => {
-      const { column, value } = filter;
-      if (column === 'date') {
-        if (value.length > 0) {
-          filteredResults = filteredResults.filter((item) =>
-            value.includes(item[column].substring(0, 7))
-          );
-        }
-      } else {
-        if (value.length > 0) {
-          filteredResults = filteredResults.filter((item) => value.includes(String(item[column])));
-        }
-      }
-    });
-
-    sortData(filteredResults, sortCriteria, sortOrder);
-
-    setFilteredData(filteredResults);
-  };
+  
 
   function sortData(filteredResults: TravelData[], sortCriteria: string, sortOrder: string) {
     filteredResults.sort((a, b) => {

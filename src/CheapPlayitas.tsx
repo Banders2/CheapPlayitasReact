@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import styles from './CheapPlayitas.module.css';
+import Select from 'react-select';
+
+interface ColumnData {
+  columnName: string;
+  headerText: string;
+}
 
 interface TravelData {
   airport: string;
@@ -11,19 +17,17 @@ interface TravelData {
   [key: string]: string; // Index signature
 }
 
-
 const CheapPlayitas: React.FC = () => {
   const [travelData, setTravelData] = useState<TravelData[]>([]);
   const [filteredData, setFilteredData] = useState<TravelData[]>([]);
   const [filters, setFilters] = useState<{ column: string; value: string[] }[]>([]);
-  const [maxPrice, setMaxPrice] = useState<number>(Infinity);
+  const [maxPrice, setMaxPrice] = useState<number | undefined>(undefined);
   const [sortCriteria, setSortCriteria] = useState<string>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // const response = await fetch('https://localhost:7291/api/prices');
         const response = await fetch('https://cheapplayitasapi.azurewebsites.net/api/prices');
         const json: TravelData[] = await response.json();
 
@@ -37,26 +41,33 @@ const CheapPlayitas: React.FC = () => {
     fetchData();
   }, []);
 
-  const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, column: string) => {
-    const value = event.target.value;
+  const handleFilterChange = ({
+    column,
+    event,
+    selectedOptions,
+  }: {
+    column: string;
+    event?: React.ChangeEvent<HTMLInputElement>;
+    selectedOptions?: any;
+  }) => {
+    if (selectedOptions) {
+      const selectedValues = Array.isArray(selectedOptions)
+        ? selectedOptions.map((option) => option.value)
+        : [];
 
-    if (event.target instanceof HTMLSelectElement) {
-      const selectedOptions = Array.from(event.target.options)
-        .filter((option) => option.selected && option.value !== '')
-        .map((option) => option.value);
       const existingFilterIndex = filters.findIndex((filter) => filter.column === column);
-
       if (existingFilterIndex > -1) {
         const updatedFilters = [...filters];
-        updatedFilters[existingFilterIndex].value = selectedOptions;
-
+        updatedFilters[existingFilterIndex].value = selectedValues;
         setFilters(updatedFilters);
       } else {
-        setFilters([...filters, { column, value: selectedOptions }]);
+        setFilters([...filters, { column, value: selectedValues }]);
       }
-    } else if (column === 'price') {
-      const numericValue = parseFloat(value);
-      setMaxPrice(isNaN(numericValue) ? Infinity : numericValue);
+    } else if (event) {
+      const value = event.target.value;
+      if (column === 'price') {
+        setMaxPrice(value !== '' ? parseFloat(value) : undefined);
+      }
     }
   };
 
@@ -66,15 +77,17 @@ const CheapPlayitas: React.FC = () => {
 
   const applyFilters = () => {
     let filteredResults = [...travelData];
-    filteredResults = filteredResults.filter((item) =>
-      parseFloat(item['price']) <= maxPrice
-    );
+    if (maxPrice !== undefined) {
+      filteredResults = filteredResults.filter((item) => parseFloat(item.price) <= maxPrice);
+    }
 
     filters.forEach((filter) => {
       const { column, value } = filter;
       if (column === 'date') {
         if (value.length > 0) {
-          filteredResults = filteredResults.filter((item) => value.includes(item[column].substring(0, 7)));
+          filteredResults = filteredResults.filter((item) =>
+            value.includes(item[column].substring(0, 7))
+          );
         }
       } else {
         if (value.length > 0) {
@@ -101,20 +114,28 @@ const CheapPlayitas: React.FC = () => {
     });
   }
 
-  const getUniqueSortedValues = <T, K extends keyof T>(data: T[], getProperty: (item: T) => T[K]): string[] => {
+  const getUniqueSortedValues = <T, K extends keyof T>(
+    data: T[],
+    getProperty: (item: T) => T[K]
+  ): string[] => {
     return [...new Set(data.map(getProperty))].sort() as string[];
   };
 
-  const getUniqueSortedNumberValues = <T, K extends keyof T>(data: T[], getProperty: (item: T) => T[K]): string[] => {
-    return [...new Set(data.map(getProperty))]
-      .sort((a, b) => Number(a) - Number(b))
-      .map(String);
+  const getUniqueSortedNumberValues = <T, K extends keyof T>(
+    data: T[],
+    getProperty: (item: T) => T[K]
+  ): string[] => {
+    return [...new Set(data.map(getProperty))].sort((a, b) => Number(a) - Number(b)).map(String);
   };
 
-  const uniqueHotels = getUniqueSortedValues<TravelData, string>(travelData, (item) => item.hotel);
-  const uniqueAirports = getUniqueSortedValues<TravelData, string>(travelData, (item) => item.airport);
-  const uniqueDurations = getUniqueSortedNumberValues<TravelData, string>(travelData, (item) => item.duration);
-  const uniqueYearMonthCombinations = getUniqueSortedValues<TravelData, string>(travelData, (item) => item.date.substring(0, 7));
+  const columnData: ColumnData[] = [
+    { columnName: 'airport', headerText: 'Airport' },
+    { columnName: 'price', headerText: 'Price' },
+    { columnName: 'date', headerText: 'Date' },
+    { columnName: 'duration', headerText: 'Duration' },
+    { columnName: 'hotel', headerText: 'Hotel' },
+
+  ];
 
   return (
     <div>
@@ -122,12 +143,30 @@ const CheapPlayitas: React.FC = () => {
       <table className={styles.table}>
         <thead>
           <tr>
-            {DropdownList(uniqueAirports, 'airport')}
-            {MaxValue('price')}
-            {DropdownListWithSort(uniqueYearMonthCombinations, 'date')}
-            {DropdownList(uniqueDurations, 'duration')}
-            {DropdownList(uniqueHotels, 'hotel')}
-            <th className={styles.cell}>Link</th>
+            {columnData.map((column) => (
+              <th key={column.columnName} className={styles.cell}>
+                <div className={styles.columnHeader}>
+                  <div>{column.headerText}
+                    {column.columnName === 'date' && sortButton('date')}
+                    {column.columnName === 'price' && sortButton('price')}
+                  </div>
+
+                </div>
+                {column.columnName === 'price' ? (
+                  <div className={styles.filterInput}>
+                  <input
+                    type="number"
+                    placeholder="Enter Max Price"
+                    value={maxPrice !== undefined ? maxPrice.toString() : ''}
+                    onChange={(e) => handleFilterChange({ column: 'price', event: e })}
+                  />
+                  </div>
+                ) : (
+                  <DropdownList column={column.columnName} />
+                )}
+              </th>
+            ))}
+            <th className={styles.cell}>Link</th> {/* Header cell for "Link" column */}
           </tr>
         </thead>
         <tbody>
@@ -150,50 +189,27 @@ const CheapPlayitas: React.FC = () => {
     </div>
   );
 
-  function MaxValue(columnName: string) {
-    return <th className={styles.cell}>
-      <input
-        type="number"
-        placeholder="Enter Max Price"
-        value={maxPrice === Infinity ? '' : maxPrice}
-        onChange={(e) => handleFilterChange(e, columnName)} />
-      {
-        sortButton(columnName)
-      }
-    </th>;
-  }
+  function DropdownList({ column }: { column: string }) {
+    let uniqueValues: string[];
+    if (column === 'date') {
+      uniqueValues = getUniqueSortedValues<TravelData, string>(travelData, (item) => item[column].substring(0, 7));
+    } else if (column === 'duration') {
+      uniqueValues = getUniqueSortedNumberValues<TravelData, string>(travelData, (item) => item[column]);
+    } else {
+      uniqueValues = getUniqueSortedValues<TravelData, string>(travelData, (item) => item[column]);
+    }
 
-  function DropdownList(uniqueList: string[], columnName: string) {
-    let selectedList = filters.find(x => x.column === columnName)?.value
-    return <th className={styles.cell}>
-      {DropdownListUi(selectedList, uniqueList, columnName)}
-    </th>;
-  }
+    let selectedList = filters.find((x) => x.column === column)?.value;
 
-  function DropdownListWithSort(uniqueList: string[], columnName: string) {
-    let selectedList = filters.find(x => x.column === columnName)?.value
-    return <th className={styles.cell}>
-      {DropdownListUi(selectedList, uniqueList, columnName)}
-      {
-        sortButton(columnName)
-      }
-    </th>;
-  }
-
-  function DropdownListUi(selectedList: string[] | undefined, uniqueList: string[], columnName: string) {
-    return <select
-      className={styles.filterInput}
-      value={selectedList?.length === uniqueList.length ? '' : selectedList}
-      onChange={(e) => handleFilterChange(e, columnName)}
-      multiple
-    >
-      <option value="">All {columnName}s</option>
-      {uniqueList.map((element) => (
-        <option key={element} value={element}>
-          {element}
-        </option>
-      ))}
-    </select>;
+    return (
+      <Select
+        className={styles.filterInput}
+        value={selectedList ? selectedList.map((value) => ({ value, label: value })) : []}
+        options={uniqueValues.map((value) => ({ value, label: value }))}
+        isMulti
+        onChange={(selectedOptions) => handleFilterChange({ column, selectedOptions })}
+      />
+    );
   }
 
   function sortButton(columnName: string): React.ReactNode {
@@ -212,7 +228,7 @@ const CheapPlayitas: React.FC = () => {
           setSortOrder('asc');
         }}
       >
-        Sort
+        ▶
       </button>
     );
   }

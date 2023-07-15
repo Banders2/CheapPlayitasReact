@@ -2,84 +2,102 @@ table {
     font-family: arial, sans-serif;
     border-collapse: collapse;
     width: 100%;
-}
-
-td,
-th {
+  }
+  
+  td,
+  th {
     border: 1px solid #dddddd;
     text-align: left;
     padding: 8px;
-}
-
-tr:nth-child(even) {
+  }
+  
+  tr:nth-child(even) {
     background-color: #dddddd;
-}
-
-input[type=number] {
-    width: 100%;
-    padding: 12px 20px;
-    margin: 8px 0;
+  }
+  
+  input[type="number"] {
+    width: 90%;
+    padding: 8px 20px;
     box-sizing: border-box;
-}
-
-input[type=number]:focus {
+  }
+  
+  input[type="number"]:focus {
     border: 3px solid #555;
-}
-
-input[type=checkbox] {
+    font-size: 14px;
+  }
+  
+  input[type="checkbox"] {
     width: 40px;
     height: 40px;
-}
-
-
-.filterInput {
+  }
+  
+  .filterInput {
     width: 100%;
     padding: 8px;
     border: 1px solid #ccc;
     border-radius: 4px;
     font-size: 14px;
-}
-
-.filterInput option {
+    box-sizing: border-box; /* Add this line */
+  }
+  
+  .filterInput option {
     background-color: #fff;
     color: #000;
-}
-
-.filterInput:focus {
+  }
+  
+  .filterInput:focus {
     outline: none;
     border-color: #888;
     box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
-}
-
-.blue {
+  }
+  
+  .blue {
     color: blue;
-}
-
-.table {
+  }
+  
+  .table {
     border-collapse: collapse;
     width: 100%;
-}
-
-.cell {
+  }
+  
+  .cell {
     padding: 10px;
-}
-
-.evenRow {
+    vertical-align: top;
+    text-align: center;
+  }
+  
+  .evenRow {
     background-color: #f5f5f5;
-}
-
-.filterInput {
-    width: 100%;
-}
-
-.sortButton {
+  }
+  
+  .sortButton {
     background-color: transparent;
     border: none;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 12px;
     font-weight: bold;
-}
-
-.sortButton:hover {
+    vertical-align: top;
+  }
+  
+  .sortButton:hover {
     color: blue;
-}
+  }
+  
+  .sortButtons {
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  .filterInput input[type="number"] {
+    width: 100%;
+    border: none;
+    background-color: transparent;
+    font-size: 14px;
+    color: #000;
+    outline: none;
+  }
+  
+  .filterInput input[type="number"]:focus {
+    border-color: #888;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+  }

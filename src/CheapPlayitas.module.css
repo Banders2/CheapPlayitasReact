@@ -13,8 +13,7 @@ th {
 
 @media (max-width: 1000px) {
   /* Adjust the breakpoint value as needed */
-  td,
-  th {
+  td {
     max-width: 150px; /* Adjust the maximum width as needed */
     overflow: hidden;
     text-overflow: ellipsis;

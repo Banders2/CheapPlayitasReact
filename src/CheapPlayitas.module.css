@@ -11,6 +11,17 @@ th {
   padding: 8px;
 }
 
+@media (max-width: 1000px) {
+  /* Adjust the breakpoint value as needed */
+  td,
+  th {
+    max-width: 150px; /* Adjust the maximum width as needed */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
 tr:nth-child(even) {
   background-color: #dddddd;
 }

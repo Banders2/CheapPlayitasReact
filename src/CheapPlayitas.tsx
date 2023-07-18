@@ -209,7 +209,6 @@ const CheapPlayitas: React.FC = () => {
                   </th>
                 ))}
                 <th className={styles.cell}>Link</th>{' '}
-                {/* Header cell for "Link" column */}
               </tr>
             </thead>
             <tbody>
@@ -275,6 +274,7 @@ const CheapPlayitas: React.FC = () => {
         onChange={(selectedOptions) => {
           handleFilterChange({ column, selectedOptions })
         }}
+        isSearchable={false}
       />
     )
   }

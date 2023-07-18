@@ -208,7 +208,6 @@ const CheapPlayitas: React.FC = () => {
                     )}
                   </th>
                 ))}
-                <th className={styles.cell}>Link</th>{' '}
               </tr>
             </thead>
             <tbody>
@@ -221,14 +220,13 @@ const CheapPlayitas: React.FC = () => {
                   <td className={styles.cell}>{item.price}</td>
                   <td className={styles.cell}>{item.date.substring(0, 10)}</td>
                   <td className={styles.cell}>{item.duration}</td>
-                  <td className={styles.cell}>{item.hotel}</td>
                   <td className={styles.cell}>
                     <a
                       href={item.link}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      View Details
+                      {item.hotel}
                     </a>
                   </td>
                 </tr>

@@ -2,6 +2,12 @@ import React, { useState, useEffect } from 'react';
 import styles from './CheapPlayitas.module.css';
 import Select from 'react-select';
 
+const Spinner = () => (
+  <div className={styles.spinner}>
+    <div className={styles.spinnerInner}></div>
+  </div>
+);
+
 interface ColumnData {
   columnName: string;
   headerText: string;
@@ -24,10 +30,13 @@ const CheapPlayitas: React.FC = () => {
   const [maxPrice, setMaxPrice] = useState<number | undefined>(undefined);
   const [sortCriteria, setSortCriteria] = useState<string>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setIsLoading(true);
+
         const response = await fetch('https://cheapplayitasapi.azurewebsites.net/api/prices');
         const json: TravelData[] = await response.json();
 
@@ -35,6 +44,8 @@ const CheapPlayitas: React.FC = () => {
         setFilteredData(json);
       } catch (error) {
         console.error('Error fetching data:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -145,6 +156,10 @@ const CheapPlayitas: React.FC = () => {
 
   return (
     <div>
+      {isLoading ? ( // Render the spinner while loading
+        <Spinner />
+      ) :  (
+        <React.Fragment>
       <h1 className={styles.blue}>Flight Prices</h1>
       <table className={styles.table}>
         <thead>
@@ -192,6 +207,8 @@ const CheapPlayitas: React.FC = () => {
           ))}
         </tbody>
       </table>
+      </React.Fragment>
+      )}
     </div>
   );
 

@@ -9,18 +9,7 @@ th {
   border: 1px solid #dddddd;
   text-align: left;
   padding: 8px;
-}
-
-@media (max-width: 1500px) {
-  td {
-    max-width: 150px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  th {
-    max-width: 150px;
-  }
+  min-width: 50px;
 }
 
 tr:nth-child(even) {
@@ -136,5 +125,39 @@ input[type='checkbox'] {
   }
   100% {
     transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 1500px) {
+  td {
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 10px;
+  }
+  th {
+    max-width: 150px;
+    font-size: 10px;
+  }
+  .filterInput {
+    padding: 0px;
+    border-radius: 1px;
+    font-size: 10px;
+  }
+
+  input[type='number'] {
+    font-size: 10px;
+  }
+
+  .sortButton {
+    font-size: 10px;
+  }
+
+  .input-field {
+    font-size: 10px;
+  }
+  input::placeholder {
+    font-size: 10px;
   }
 }

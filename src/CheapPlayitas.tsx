@@ -295,7 +295,7 @@ const CheapPlayitas: React.FC = () => {
           setSortOrder('asc')
         }}
       >
-        ▶
+        ►
       </button>
     )
   }

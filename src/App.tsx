@@ -1,7 +1,7 @@
 import './App.css'
 import CheapPlayitas from './CheapPlayitas'
 
-function App() {
+function App(): JSX.Element {
   return (
     <div className="App">
       <CheapPlayitas />

@@ -1,8 +1,9 @@
+/* eslint-disable multiline-ternary */
 import React, { useState, useEffect } from 'react'
 import styles from './CheapPlayitas.module.css'
 import Select from 'react-select'
 
-const Spinner = () => (
+const Spinner = (): JSX.Element => (
   <div className={styles.spinner}>
     <div className={styles.spinnerInner}></div>
   </div>
@@ -20,22 +21,22 @@ interface TravelData {
   duration: string
   hotel: string
   link: string
-  [key: string]: string // Index signature
+  [key: string]: string
 }
 
 const CheapPlayitas: React.FC = () => {
   const [travelData, setTravelData] = useState<TravelData[]>([])
   const [filteredData, setFilteredData] = useState<TravelData[]>([])
-  const [filters, setFilters] = useState<{ column: string; value: string[] }[]>(
-    []
-  )
+  const [filters, setFilters] = useState<
+    Array<{ column: string; value: string[] }>
+  >([])
   const [maxPrice, setMaxPrice] = useState<number | undefined>(undefined)
   const [sortCriteria, setSortCriteria] = useState<string>('date')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchData = async (): Promise<void> => {
       try {
         setIsLoading(true)
 
@@ -53,7 +54,7 @@ const CheapPlayitas: React.FC = () => {
       }
     }
 
-    fetchData()
+    void fetchData()
   }, [])
 
   const handleFilterChange = ({
@@ -63,9 +64,9 @@ const CheapPlayitas: React.FC = () => {
   }: {
     column: string
     event?: React.ChangeEvent<HTMLInputElement>
-    selectedOptions?: any
-  }) => {
-    if (selectedOptions) {
+    selectedOptions?: unknown
+  }): void => {
+    if (selectedOptions !== undefined) {
       const selectedValues = Array.isArray(selectedOptions)
         ? selectedOptions.map((option) => option.value)
         : []
@@ -80,7 +81,7 @@ const CheapPlayitas: React.FC = () => {
       } else {
         setFilters([...filters, { column, value: selectedValues }])
       }
-    } else if (event) {
+    } else if (event !== undefined) {
       const value = event.target.value
       if (column === 'price') {
         setMaxPrice(value !== '' ? parseFloat(value) : undefined)
@@ -89,7 +90,7 @@ const CheapPlayitas: React.FC = () => {
   }
 
   useEffect(() => {
-    const applyFilters = () => {
+    const applyFilters = (): void => {
       let filteredResults = [...travelData]
       if (maxPrice !== undefined) {
         filteredResults = filteredResults.filter(
@@ -126,7 +127,7 @@ const CheapPlayitas: React.FC = () => {
     filteredResults: TravelData[],
     sortCriteria: string,
     sortOrder: string
-  ) {
+  ): void {
     filteredResults.sort((a, b) => {
       const valueA =
         sortCriteria === 'date'
@@ -149,6 +150,7 @@ const CheapPlayitas: React.FC = () => {
     data: T[],
     getProperty: (item: T) => T[K]
   ): string[] => {
+    // eslint-disable-next-line @typescript-eslint/require-array-sort-compare
     return [...new Set(data.map(getProperty))].sort() as string[]
   }
 
@@ -171,7 +173,7 @@ const CheapPlayitas: React.FC = () => {
 
   return (
     <div>
-      {isLoading ? ( // Render the spinner while loading
+      {isLoading ? (
         <Spinner />
       ) : (
         <React.Fragment>
@@ -196,9 +198,9 @@ const CheapPlayitas: React.FC = () => {
                           value={
                             maxPrice !== undefined ? maxPrice.toString() : ''
                           }
-                          onChange={(e) =>
+                          onChange={(e) => {
                             handleFilterChange({ column: 'price', event: e })
-                          }
+                          }}
                         />
                       </div>
                     ) : (
@@ -239,7 +241,7 @@ const CheapPlayitas: React.FC = () => {
     </div>
   )
 
-  function DropdownList({ column }: { column: string }) {
+  function DropdownList({ column }: { column: string }): JSX.Element {
     let uniqueValues: string[]
     if (column === 'date') {
       uniqueValues = getUniqueSortedValues<TravelData, string>(
@@ -258,21 +260,21 @@ const CheapPlayitas: React.FC = () => {
       )
     }
 
-    let selectedList = filters.find((x) => x.column === column)?.value
+    const selectedList = filters.find((x) => x.column === column)?.value
 
     return (
       <Select
         className={styles.filterInput}
         value={
-          selectedList
+          selectedList != null
             ? selectedList.map((value) => ({ value, label: value }))
             : []
         }
         options={uniqueValues.map((value) => ({ value, label: value }))}
         isMulti
-        onChange={(selectedOptions) =>
+        onChange={(selectedOptions) => {
           handleFilterChange({ column, selectedOptions })
-        }
+        }}
       />
     )
   }
@@ -281,7 +283,9 @@ const CheapPlayitas: React.FC = () => {
     return sortCriteria === columnName ? (
       <button
         className={styles.sortButton}
-        onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+        onClick={() => {
+          setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+        }}
       >
         {sortOrder === 'asc' ? '▲' : '▼'}
       </button>

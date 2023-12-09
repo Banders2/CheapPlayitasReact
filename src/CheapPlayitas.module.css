@@ -119,6 +119,17 @@ input[type='checkbox'] {
   animation: spin 1s linear infinite;
 }
 
+.headerContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.personsInput {
+  width: 300px;
+  max-width: 50%;
+}
+
 @keyframes spin {
   0% {
     transform: rotate(0deg);

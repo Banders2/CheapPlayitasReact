@@ -31,6 +31,8 @@ const CheapPlayitas: React.FC = () => {
     Array<{ column: string; value: string[] }>
   >([])
   const [maxPrice, setMaxPrice] = useState<number | undefined>(undefined)
+  const [personsInput, setPersonsInput] = useState<string>('')
+  const [persons, setPersons] = useState<number>(2)
   const [sortCriteria, setSortCriteria] = useState<string>('date')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
   const [isLoading, setIsLoading] = useState(true)
@@ -41,7 +43,7 @@ const CheapPlayitas: React.FC = () => {
         setIsLoading(true)
 
         const response = await fetch(
-          'https://cheapplayitasapi.azurewebsites.net/api/prices'
+          `https://cheapplayitasapi.azurewebsites.net/api/prices?persons=${persons}`
         )
         const json: TravelData[] = await response.json()
 
@@ -55,7 +57,15 @@ const CheapPlayitas: React.FC = () => {
     }
 
     void fetchData()
-  }, [])
+  }, [persons])
+
+  const handlePersonsInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ): void => {
+    const val = e.target.value
+    setPersonsInput(val)
+    setPersons(val !== '' ? Math.max(1, parseInt(val)) : 2)
+  }
 
   const handleFilterChange = ({
     column,
@@ -177,7 +187,17 @@ const CheapPlayitas: React.FC = () => {
         <Spinner />
       ) : (
         <React.Fragment>
-          <h1 className={styles.blue}>Flight Prices</h1>
+          <div className={styles.headerContainer}>
+            <h1 className={styles.blue}>Flight Prices</h1>
+            <div className={styles.personsInput}>
+              <input
+                type="number"
+                value={personsInput}
+                placeholder="Enter Persons (Default 2)"
+                onChange={handlePersonsInputChange}
+              />
+            </div>
+          </div>
           <table className={styles.table}>
             <thead>
               <tr>

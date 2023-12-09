@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/CheapPlayitasReact/static/css/main.2a3b9c35.css",
-    "main.js": "/CheapPlayitasReact/static/js/main.071c935a.js",
+    "main.css": "/CheapPlayitasReact/static/css/main.5d88aa14.css",
+    "main.js": "/CheapPlayitasReact/static/js/main.38d4a926.js",
     "static/js/496.46ab865a.chunk.js": "/CheapPlayitasReact/static/js/496.46ab865a.chunk.js",
     "index.html": "/CheapPlayitasReact/index.html",
-    "main.2a3b9c35.css.map": "/CheapPlayitasReact/static/css/main.2a3b9c35.css.map",
-    "main.071c935a.js.map": "/CheapPlayitasReact/static/js/main.071c935a.js.map",
+    "main.5d88aa14.css.map": "/CheapPlayitasReact/static/css/main.5d88aa14.css.map",
+    "main.38d4a926.js.map": "/CheapPlayitasReact/static/js/main.38d4a926.js.map",
     "496.46ab865a.chunk.js.map": "/CheapPlayitasReact/static/js/496.46ab865a.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.2a3b9c35.css",
-    "static/js/main.071c935a.js"
+    "static/css/main.5d88aa14.css",
+    "static/js/main.38d4a926.js"
   ]
 }
